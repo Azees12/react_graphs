@@ -5,18 +5,22 @@ import { devtools, persist } from 'zustand/middleware';
 
 const SalesStore = (set) => ({
     data:[],
+    isLoading:false,
     fetch: 
         async(url) => {
         try {
         const response = await axios.get(url)
         const results = response.data
         console.log(results.Data)
-        set({ data: results.Data})
+        set({ data: results.Data,})
         }catch(e) {
             console.log(e)
         }
             
         
+    },
+    setisLoading: () => {
+        set({isLoading:true})
     }
 
 })

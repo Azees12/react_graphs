@@ -2,29 +2,33 @@ import useSalesStore from "../../store/SalesStore";
 import { useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 
+
+
 export function RetriveSales (){
     const fetch = useSalesStore(state => state.fetch)
+    const setisLoading = useSalesStore(state => state.setisLoading)
     useEffect(() => { 
         fetch(urlSales)
-      },[console.log("Retrieved Successfully")]);
+        setTimeout(() => {
+        setisLoading()
+        }, 1000)
+      },[]);
+    
 }
 
-export function getTotal(data){
+export function getTotal(data,prop){
     const total = data.reduce((accumulator, object) => {
-        return accumulator + object.total_price;},0)
-     return total.toFixed(2)
+        return accumulator + object[prop];},0)
+     return parseFloat(total).toFixed(2)
 }
 
-export function groupBy(array, property) {
-
-    var hash = {};
-    for (var i = 0; i < array.length; i++) {
-        if (!hash[array[i][property]]) hash[array[i][property]] = [];
-        hash[array[i][property]].push(array[i]);
-    }
-    return hash;
-}
-
+function groupBy(arr, property) {
+    return arr.reduce(function(memo, x) {
+      if (!memo[x[property]]) { memo[x[property]] = []; }
+      memo[x[property]].push(x);
+      return memo;
+    }, {});
+  }
 
 function getDistinct(arr, arr_property){
     var distinct = []
@@ -69,10 +73,19 @@ export function SalesByProducts(data){
     return products;
 }
 
-export function HighestEarnProduct(data){
-   const products = {}
-
-    return products;
+export function ProductSales(data) {
+   const products = groupBy(data,'product')
+   const productSales = []
+   Object.entries(products).map(item => {
+    productSales.push({
+        product:item[0],
+        total_sales:getTotal(item[1],"total_price"),
+        total_quantity: getTotal(item[1],"quantity"),
+        price_average: (getTotal(item[1],"total_price")/getTotal(item[1],"quantity")).toFixed(2)
+    })
+  })
+  console.log(productSales)
+    return productSales;
 }
 
 export function HighestEarningCity(data){
@@ -87,26 +100,59 @@ export function HighestEarningCategory(data){
     return category;
 }
 
-export function PieChart1(data){
-    console.log(data)
-    var o = groupBy(data,"category")
-
-    console.log(o)
+export function PieChart(data, prop){
+    var o = groupBy(data,prop)
+    const totals = []
+    const hprop = prop.charAt(0).toUpperCase() + prop.slice(1);
+    
+    Object.entries(o).map(item => {
+        totals.push(getTotal(item[1],"total_price"))
+      })
     const piedata = {
-        labels: getDistinct(data, "category"),
-        revenue: [
-                getTotal(o.Bars),
-                getTotal(o.Cookies),
-                getTotal(o.Crackers),
-                getTotal(o.Snacks)
-        ]
+        labels: getDistinct(data, prop),
+        revenue: totals,
+        header:"Sales By "+hprop
         }
-   return piedata;     
+    return piedata;   
 }
 
-export function piedata(
-    
-)
+export function TableData(data){
+    let columns = Object.keys(data[0])
+    let dataId = data.map((x, i) => {
+        x.id = i + 1
+        x.date = new Date(x.date)
+        x.total_price =  parseFloat(x.total_price).toFixed(2)
+        x.unit_price = parseFloat(x.unit_price).toFixed(2)
+        return x})
+
+
+    columns = columns.map((x) => {
+        let b =  x.replace(/_/g," ")
+        return b.charAt(0).toUpperCase() + b.slice(1);
+    })
+    const tabledata = {
+        data:data,
+        columns: [
+              {field:"category", headerName: "Category",flex: 1},
+              {field:"city", headerName: "City",flex: 1},
+              {field:"date", headerName: "Date of Sale",flex: 1, type: 'dateTime',},
+              {field:"product", headerName: "Product",flex: 1},
+              {field:"region", headerName: "Region",flex: 1},
+              {field:"total_price", headerName: "Total Price",flex: 1},
+              {field:"unit_price", headerName: "Unit Price",flex: 1}
+        ]
+          
+    }
+    return tabledata
+}
+
+export function lineData(data){
+    data = groupBy(data,"product")
+    return data
+}
+
+
+
 
 
     
