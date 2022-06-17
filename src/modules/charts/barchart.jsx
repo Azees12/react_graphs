@@ -63,7 +63,7 @@ const [chartData,setChartData] = useState({
       label: 'Total Quantity',
       data: props.props.map((value) => value.total_quantity),
       backgroundColor: 'rgb(75, 192, 192)',
-      yAxisID: 'y',
+      yAxisID: 'y1',
     },
    
   ],
